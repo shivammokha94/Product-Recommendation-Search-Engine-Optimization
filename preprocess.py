@@ -78,7 +78,8 @@ punc = string.punctuation
 dig = string.digits
 pundig = re.compile(r'[%s%s]'%(dig,punc)) 
 sw = stopwords.words('english')
-
+sw.extend(["rt", "new", "post", "thank", "amp", "thank", "today", "yes", "just", "day", "oh", "ve", "like", "got", "xo", "need", "awh", "ll", "haha"])
+am = re.compile(r'amazon com')
 
 #Slang clean
 sl = slangdict.keys()
@@ -98,6 +99,7 @@ def cln(col):
     col = splchar.sub(' ', col)
     col = pundig.sub(' ', col)
     col = slang.sub(' ', col)
+    col = am.sub(' ', col)
     senlist = col.split()
     textclean = ' '.join([w for w in senlist])
     #if w.lower() not in sw

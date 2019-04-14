@@ -14,11 +14,10 @@ sw = stopwords.words('english')
 import json, re, nltk, string
 from sklearn.feature_extraction import text
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from fuzzywuzzy import process
+import networkx as nx
+import matplotlib.pyplot as plt
 lemma = nltk.wordnet.WordNetLemmatizer()
-
-
-sw = stopwords.words('english')
-sw.extend(["rt", "new", "post", "thank", "amp", "thank", "today", "yes", "just", "day", "oh", "ve", "like", "got", "xo", "need", "awh", "ll", "haha"])
 
 
 def count_vec(x, n= 30000):
@@ -57,7 +56,7 @@ np.savetxt('/Users/smokha/Projects/FYI_Keyword_Heirarchy_BC/brands_1.txt', brand
 
 brands_pd = pd.DataFrame(pd.read_csv('/Users/smokha/Projects/FYI_Keyword_Heirarchy_BC/brands_1.txt', sep = "|", header = None))
 brands_pd.columns = ['asin', 'brand']
-titles_pd = pd.DataFrame(pd.read_csv('/Users/smokha/Projects/FYI_Keyword_Heirarchy_BC/titles_1.txt', sep = "|", header = None))
+titles_pd = pd.DataFrame(pd.read_csv('/Users/smokha/Projects/Test_Folder_FYI/titles_1.txt', sep = "|", header = None))
 titles_pd.columns = ['asin', 'titles']
 amazon_db = pd.DataFrame(titles_pd.merge(brands_pd, how = 'inner', on = 'asin'))
 amazon_db = amazon_db[amazon_db['brand'] != 'NaN']
@@ -87,7 +86,7 @@ amazon_db['titles'] = amazon_db['titles'].apply(lambda x: count_vec(x))
 
 
 amazon_db
-
+amazon_prodic
 userdf = preprocess.start_preprocess()
 
 
@@ -114,8 +113,7 @@ with open('/Users/smokha/Projects/FYI_Keyword_Heirarchy_BC/user_key.json', 'w') 
     json.dump(userdf_prodic, fp, default=set_default)
 
 
-from fuzzywuzzy import process
-import networkx
+
 
 str2Match = "life, mom, motherhood, organized, school, spring"
 strOptions = ["Cream Spring: Clothing"]
@@ -129,3 +127,21 @@ print(highest)
 
 
 
+
+
+g = nx.DiGraph()
+g.add_nodes_from(amazon_prodic.keys())
+
+
+for k, v in amazon_prodic.items():
+    g.add_edges_from(([(k, t) for t in v]))
+    
+pos=nx.spring_layout(g)
+
+p = nx.draw(g,pos,with_labels=True, node_size=60,font_size=8)
+plt.draw()
+plt.show()
+
+p.savefig("plot.png", dpi=1000)
+
+nx.write_gml(g, "amazon_prod.gml")
