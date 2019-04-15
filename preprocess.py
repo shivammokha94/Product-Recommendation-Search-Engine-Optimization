@@ -101,8 +101,7 @@ def cln(col):
     col = slang.sub(' ', col)
     col = am.sub(' ', col)
     senlist = col.split()
-    textclean = ' '.join([w for w in senlist])
-    #if w.lower() not in sw
+    textclean = ' '.join([w for w in senlist if w.lower() not in sw])
     return textclean
     
 ###############################################################################
