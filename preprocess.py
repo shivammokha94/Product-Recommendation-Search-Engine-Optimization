@@ -222,7 +222,8 @@ def start_preprocess():
     instwi_comb = instwi_comb.drop('TIPP_URL', axis = 1)
 
     instwi_comb = dict(zip(instwi_comb['id'], instwi_comb['Data']))
-
+    
+    return instwi_comb
 
 ###############################################################################
 

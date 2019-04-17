@@ -10,6 +10,7 @@ import pandas as pd
 import preprocess
 import numpy as np
 from nltk.corpus import stopwords
+from nltk import tokenize
 sw = stopwords.words('english')
 import json, re, nltk, string
 from sklearn.feature_extraction import text
@@ -19,7 +20,12 @@ import networkx as nx
 import matplotlib.pyplot as plt
 lemma = nltk.wordnet.WordNetLemmatizer()
 
-
+def set_default(obj):
+    if isinstance(obj, set):
+        return list(obj)
+    raise TypeError
+    
+    
 def count_vec(x, n= 30000):
     
     tf_vectorizer = CountVectorizer(max_features = n, stop_words = sw)
@@ -30,8 +36,7 @@ def count_vec(x, n= 30000):
 
 
 ##########################################################################################################
-#
-#
+
 
 
 titles = pd.read_csv('/Users/smokha/Projects/FYI_Keyword_Heirarchy_BC/titles.txt', delimiter = " ",header = None)
@@ -54,15 +59,18 @@ np.savetxt('/Users/smokha/Projects/FYI_Keyword_Heirarchy_BC/brands_1.txt', brand
 
 
 
+
+
+
+
+##########################################################################################################
 brands_pd = pd.DataFrame(pd.read_csv('/Users/smokha/Projects/FYI_Keyword_Heirarchy_BC/brands_1.txt', sep = "|", header = None))
 brands_pd.columns = ['asin', 'brand']
 titles_pd = pd.DataFrame(pd.read_csv('/Users/smokha/Projects/Test_Folder_FYI/titles_1.txt', sep = "|", header = None))
 titles_pd.columns = ['asin', 'titles']
 amazon_db = pd.DataFrame(titles_pd.merge(brands_pd, how = 'inner', on = 'asin'))
 amazon_db = amazon_db[amazon_db['brand'] != 'NaN']
-
 bb_az = pd.DataFrame(pd.read_csv('/Users/smokha/Projects/FYI_Keyword_Heirarchy_BC/diepiedata.csv', sep = ","))
-
 amazon_db = amazon_db.append(bb_az, ignore_index = True)
 amazon_db = amazon_db.drop(['asin'], axis = 1)
 amazon_db['titles'] = amazon_db['titles'].apply(lambda x: preprocess.cln(x))
@@ -81,67 +89,59 @@ amazon_prodic = dict(amazon_db.groupby('brand')['titles'].apply(list))
 amazon_db = pd.DataFrame(list(amazon_prodic.items()), columns = ['brand', 'titles'])
 amazon_db['titles'] = amazon_db['titles'].apply(" ".join)
 amazon_db['titles'] = amazon_db['titles'].apply(lambda x: count_vec(x))
+amazon_prodic = dict(amazon_db.groupby('brand')['titles'].apply(list))
 #amazon_db = pd.DataFrame(amazon_db.merge(bb_az, how = 'inner', on = 'brand'))
 #bbner = pd.DataFrame(pd.read_csv('/Users/smokha/Projects/FYI_Keyword_Heirarchy_BC/bb_ner_ds.tsv', sep = '\t'))
 
 
-amazon_db
-amazon_prodic
-userdf = preprocess.start_preprocess()
-
-
-
-userdf = pd.DataFrame(list(userdf.items()), columns = ['i_id', 'text'])
-
-userdf['text'] = userdf['text'].apply(lambda x: count_vec(x, 25))
-
-userdf
-
-
-
-def set_default(obj):
-    if isinstance(obj, set):
-        return list(obj)
-    raise TypeError
+for k, v in amazon_prodic.items():
+    amazon_prodic[k] = sum(v, [])
     
-amazon_prodic = dict(amazon_db.groupby('brand')['titles'].apply(list))
 with open('/Users/smokha/Projects/FYI_Keyword_Heirarchy_BC/amazon_prod.json', 'w') as fp:
-    json.dump(amazon_prodic, fp, default=set_default)
+    json.dump(amazon_prodic, fp, default=set_default)   
+    
+ama_net = nx.Graph(amazon_prodic)
+nx.write_gml(ama_net, "amazon_prod.gml")
 
+ama_net.nodes()
+ama_net.edges("apple")
+ama_net.neighbors("apple")
+    
+##########################################################################################################
+
+userdf = preprocess.start_preprocess()
+userdf = pd.DataFrame(list(userdf.items()), columns = ['i_id', 'text'])
+userdf['text'] = userdf['text'].apply(lambda x: count_vec(x, 30))
 userdf_prodic = dict(userdf.groupby('i_id')['text'].apply(list))
+
+for k, v in userdf_prodic.items():
+    userdf_prodic[k] = sum(v, [])
+    
 with open('/Users/smokha/Projects/FYI_Keyword_Heirarchy_BC/user_key.json', 'w') as fp:
     json.dump(userdf_prodic, fp, default=set_default)
 
+user_net = nx.Graph(userdf_prodic)
+nx.write_gml(user_net, "user_network.gml")
 
 
+userdf
+userdf_prodic
+
+
+
+
+
+##########################################################################################################
 
 str2Match = "life, mom, motherhood, organized, school, spring"
 strOptions = ["Cream Spring: Clothing"]
 Ratios = process.extract(str2Match,strOptions)
 print(Ratios)
+
 # You can also select the string with the highest matching percentage
 highest = process.extractOne(str2Match,strOptions)
 print(highest)
+  
 
 
 
-
-
-
-
-g = nx.DiGraph()
-g.add_nodes_from(amazon_prodic.keys())
-
-
-for k, v in amazon_prodic.items():
-    g.add_edges_from(([(k, t) for t in v]))
-    
-pos=nx.spring_layout(g)
-
-p = nx.draw(g,pos,with_labels=True, node_size=60,font_size=8)
-plt.draw()
-plt.show()
-
-p.savefig("plot.png", dpi=1000)
-
-nx.write_gml(g, "amazon_prod.gml")
