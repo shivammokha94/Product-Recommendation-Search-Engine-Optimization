@@ -133,15 +133,6 @@ userdf_prodic
 
 ##########################################################################################################
 
-str2Match = "life, mom, motherhood, organized, school, spring"
-strOptions = ["Cream Spring: Clothing"]
-Ratios = process.extract(str2Match,strOptions)
-print(Ratios)
-
-# You can also select the string with the highest matching percentage
-highest = process.extractOne(str2Match,strOptions)
-print(highest)
-  
 
 
 
