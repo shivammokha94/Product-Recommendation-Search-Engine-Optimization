@@ -3,6 +3,8 @@
 """
 @author: smokha
 """
+#File 1: Preprocessing instagram & twitter users
+
 
 import os, string, re, requests, nltk, json
 import pandas as pd
@@ -26,7 +28,6 @@ dest_file_loc = os.path.join(curr_path+half_path)
 
 def get_twitter_updated(tweet_file, each):
     
-    
     tweets = open(tweet_file, 'r+')
     tweets = pd.DataFrame(tweets.readlines())
     tweets = tweets.dropna(how = 'any')
@@ -41,7 +42,7 @@ def get_twitter_updated(tweet_file, each):
 
 
 ###############################################################################
-#Slang soup
+#Slang soup (Remove Slang Words)
 
 resp = requests.get('http://www.netlingo.com/acronyms.php', verify =False)
 soup = BeautifulSoup(resp.text, "html.parser")
@@ -61,6 +62,7 @@ with open(os.path.join(curr_path+slang_path), 'w') as find:
     
 
 ###############################################################################
+# All regex patterns for cleaning
 
 lemma = nltk.wordnet.WordNetLemmatizer()
 nltk.download('wordnet')  
